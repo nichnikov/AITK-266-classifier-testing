@@ -14,23 +14,21 @@ classifier_search = []
 jaccard_search = []
 
 t = time.time()
-for text in test_texts[:100]:
+for k, text in enumerate(test_texts):
     search_dict = {"pubid": 9,
                    "text": text}
     fa_r = requests.post(fa_url, json=search_dict)
     cl_r = requests.post(cl_url, json=search_dict)
-    jaccard_search.append(fa_r.json())
-    classifier_search.append(cl_r.json())
-print("working time:", time.time() - t)
+    fa_r_dct = fa_r.json()
+    cl_r_dct = cl_r.json()
+    fa_r_dct["query"] = text
+    cl_r_dct["query"] = text
+    jaccard_search.append(fa_r_dct)
+    classifier_search.append(cl_r_dct)
+    print(k, "/", len(test_texts))
 
 classifier_search_df = pd.DataFrame(classifier_search)
 jaccard_search_df = pd.DataFrame(jaccard_search)
+classifier_search_df.to_csv(os.path.join("results", "classifier.csv"), sep="\t", index=False)
+jaccard_search_df.to_csv(os.path.join("results", "jaccard.csv"), sep="\t", index=False)
 
-print(classifier_search_df)
-
-classifier_search_df.to_csv(os.path.join("results", "classifier.csv"), sep="\t")
-jaccard_search_df.to_csv(os.path.join("results", "jaccard.csv"), sep="\t")
-
-print(classifier_search[:10])
-print(jaccard_search[:10])
-print(len(classifier_search), len(jaccard_search))
