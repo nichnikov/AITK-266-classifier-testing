@@ -1,14 +1,13 @@
 import os
 import aiohttp
 import asyncio
-import requests
 import pandas as pd
+import time
 
 
 async def searching(session, url, data):
     async with session.post(url, json=data) as resp:
-        response = await resp.json()
-        return response
+        return await resp.json()
 
 
 async def search(send_data: {}, urls_for_searching: []):
@@ -18,14 +17,12 @@ async def search(send_data: {}, urls_for_searching: []):
     session_timeout = aiohttp.ClientTimeout(sock_connect=timeout_seconds, sock_read=timeout_seconds)
     async with aiohttp.ClientSession(connector=conn, timeout=session_timeout) as session:
         tasks = []
-        for url, sign in urls_for_searching:
+        for url in urls_for_searching:
             tasks.append(asyncio.ensure_future(searching(session, url, send_data)))
-        try:
-            taking_responses = await asyncio.gather(*tasks)
-        except:
-            return {"templateId": 0, "templateText": ""}
+        taking_responses = await asyncio.gather(*tasks)
     for response in taking_responses:
         results.append(response)
+    return results
 
 
 fa_url = "http://srv01.nlp.dev.msk2.sl.amedia.tech:4021/api/search"
@@ -38,13 +35,14 @@ test_texts = list(df["text"])
 classifier_search = []
 jaccard_search = []
 
-for text in test_texts[:10]:
-    search_dict = {"pubid": 9,
-                   "text": text}
+search_data = [{"pubid": 9, "text": tx} for tx in test_texts[:100]]
+results = []
+t = time.time()
+for search_dict in search_data:
+    loop = asyncio.new_event_loop()
+    res = loop.run_until_complete(search(search_dict, [fa_url, cl_url]))
+    results.append(tuple(res))
+print(time.time() - t)
 
-
-    '''
-    fa_r = requests.post(fa_url, json=search_dict)
-    cl_r = requests.post(cl_url, json=search_dict)
-    jaccard_search.append(fa_r)
-    classifier_search.append(cl_r)'''
+print(results[:10])
+print(len(results))

@@ -13,6 +13,7 @@ test_texts = list(df["text"])
 classifier_search = []
 jaccard_search = []
 
+
 t = time.time()
 for k, text in enumerate(test_texts):
     search_dict = {"pubid": 9,
